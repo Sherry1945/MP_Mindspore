@@ -1,0 +1,27 @@
+
+>>>>>>>>>> group_filter_map <<<<<<<<<<
+
+>>>>>>>>>> dependences <<<<<<<<<<
+{ S_1[ax0, ax1] -> S_2[ax0' = ax0, ax1' = ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767; 
+  S_0[ax0, ax1] -> S_2[ax0' = ax0, ax1' = ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767 }
+
+>>>>>>>>>> constraints <<<<<<<<<<
+domain: "{ S_0[ax0, ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767;"
+          "S_2[ax0, ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767;"
+          "S_1[ax0, ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767 }"
+validity: "{ S_1[ax0, ax1] -> S_2[ax0' = ax0, ax1' = ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767;"
+            "S_0[ax0, ax1] -> S_2[ax0' = ax0, ax1' = ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767 }"
+proximity: "{ S_1[ax0, ax1] -> S_2[ax0' = ax0, ax1' = ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767;"
+             "S_0[ax0, ax1] -> S_2[ax0' = ax0, ax1' = ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767 }"
+coincidence: "{ S_1[ax0, ax1] -> S_2[ax0' = ax0, ax1' = ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767;"
+               "S_0[ax0, ax1] -> S_2[ax0' = ax0, ax1' = ax1] : 0 <= ax0 <= 99 and 0 <= ax1 <= 767 }"
+
+>>>>>>>>>> time_records <<<<<<<<<<
+[ Polyhedral exec time ], InitSchedule spent 18.6909 ms
+[ Polyhedral exec time ], ComputeSchedule spent 3.8046 ms
+[ Polyhedral exec time ], AnalyzeSchedule spent 34.157 ms
+[ Polyhedral exec time ], TileOuterBand spent 32.4612 ms
+[ Polyhedral exec time ], MappingOuterBand spent 7.46592 ms
+[ Polyhedral exec time ], SharedMemoryManager spent 407.578 ms
+[ Polyhedral exec time ], RegisterMemoryManager spent 878.74 ms
+[ Polyhedral exec time ], RealizeManager spent 3.85499 ms

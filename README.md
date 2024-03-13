@@ -77,7 +77,7 @@ python eval.py --device_target="GPU" --swin_config=$CONFIG_PATH --pretrained=$CH
 
 ### Training
 
-#### Train with ResNet
+#### Train with MomentProbing
 
 You can run the `main.py` to train as follow:
 

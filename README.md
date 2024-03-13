@@ -1,6 +1,6 @@
 # MomentProbing_mindspore
 
-This is an code implementation of ICCV2023 paper using mindspore([Tuning Pre-trained Model via Moment Probing](https://ieeexplore.ieee.org/document/10377394) ), created by, Mingze Gao,Zhenyi Liu and Qilong Wang.
+This is an code implementation of ICCV2023 paper using mindspore( [Tuning Pre-trained Model via Moment Probing](https://ieeexplore.ieee.org/document/10377394) ), created by, Mingze Gao,Zhenyi Liu and Qilong Wang.
 
 
 ## Introduction

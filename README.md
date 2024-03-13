@@ -7,15 +7,15 @@ This is an code implementation of ICCV2023 paper using mindspore( [Tuning Pre-tr
 Recently, efficient fine-tuning of large-scale pre-trained models has attracted increasing research interests, where linear probing (LP) as a fundamental module is involved in exploiting the final representations for task-dependent classification. However, most of the existing methods focus on how to effectively introduce a few of learnable parameters, and little work pays attention to the commonly used LP module. In this paper, we propose a novel Moment Probing (MP) method to further explore the potential of LP. Distinguished from LP which builds a linear classification head based on the mean of final features (e.g., word tokens for ViT) or classification tokens, our MP performs a linear classifier on feature distribution, which provides the stronger representation ability by exploiting richer statistical information inherent in features. Specifically, we represent feature distribution by its characteristic function, which is efficiently approximated by using first- and second-order moments of features.
 ![Poster](fig/fig.png)
 
-## Main Results on ImageNet with Pretrained Models
+## Main Results on Four Downstream Tasks with ViT-B/16 Pre-trianed on IN-21K 
 
 
-|Method          | IN-1k | Cifar-100 | NABirds |CUB-200| #Params.(M) (Imagenet-1k/other datasets )| Checkpoint                                                          |
+|Method          | IN-1k | Cifar-100 | NABirds |CUB-200| #Params.(M) (IN-1k/other datasets )| Checkpoint                                                          |
 | ------------------ | ----- | ------- | ----- | ----------------|--------------------|------------------------ |  
 | LinearProbing  |  82.0 | 88.7 |   75.9  |    85.3|0.77/0.17           | |  
 | Full-Finetune   |83.6 |   93.8| 85.7  |89.5|86.57/85.96 ||  
 | MP+ （Mindspore）  | 84.0 |  94.0  |  85.9   |  89.3       |   4.10/1.64  |[Imagenet-1K ](https)  |  
-| MP+ （Pytorch）  | 84.0 |  94.0  |  85.9   |  89.3       |   4.10/1.64  |[Imagenet-1K ](https)  | 
+| MP+ （Pytorch）  | 83.6 |  94.2  |  86.1   |  89.9       |   4.10/1.64  |[Imagenet-1K ](https)  | 
 ## Usage
 ### Environments
 ●OS：18.04  

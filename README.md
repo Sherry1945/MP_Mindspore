@@ -75,7 +75,7 @@ and the training and validation data is expected to be in the `train/` folder an
       img4.jpeg
 ```
 ### Pretrained Checkpoint
-[ViT-B/16 Pre-trianed on IN-21K](https://drive.google.com/file/d/1T2MRL9ml0grX1wP2lF6QhhghWS-YDal-/view?usp=drive_link)
+[ViT-B/16 Pre-trianed on IN-21K](https://drive.google.com/file/d/1U3vhxYlx0xE5GrNJhLAL4I1qj9Q_N2nS/view?usp=sharing)
     
 ### Evaluation
 

@@ -10,11 +10,11 @@ Recently, efficient fine-tuning of large-scale pre-trained models has attracted 
 ## Main Results on ImageNet with Pretrained Models
 
 
-|Method          | Imagenet-1k | Cifar-100 | NABirds |CUB-200-2011| #Params.(M) | Checkpoint                                                          |
+|Method          | Imagenet-1k | Cifar-100 | NABirds |CUB-200-2011| #Params.(M) (Imagenet-1k/other datasets )| Checkpoint                                                          |
 | ------------------ | ----- | ------- | ----- | ----------------|--------------------|------------------------ |  
-| LinearProbing  |  82.0 | 88.7 |   75.9  |    85.3|0.17           | |  
-| Full-Finetune   |83.6 |   93.8| 85.7  |89.5|85.96 ||  
-| MP++   | 84.0 |  94.0  |  85.9   |  89.3            |([Imagenet-1K ](https)  |  
+| LinearProbing  |  82.0 | 88.7 |   75.9  |    85.3|0.77/0.17           | |  
+| Full-Finetune   |83.6 |   93.8| 85.7  |86.57/89.5|85.96 ||  
+| MP++   | 84.0 |  94.0  |  85.9   |  89.3       |   4.10/1.64  |([Imagenet-1K ](https)  |  
 
 
 ## Usage

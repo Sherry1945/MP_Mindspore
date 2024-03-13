@@ -10,7 +10,7 @@ Recently, efficient fine-tuning of large-scale pre-trained models has attracted 
 ## Main Results on Four Downstream Tasks with ViT-B/16 Pre-trianed on IN-21K 
 
 
-|Method          | IN-1k | Cifar-100 | NABirds |CUB-200| #Params.(M)  (IN-1k/ other )| Checkpoint                                                          |
+|Method          | IN-1k | Cifar-100 | NABirds |CUB-200| Params.(M)  (IN-1k/ other )| Checkpoint                                                          |
 | ------------------  |-----| ----- | ----------------|--------------------|------------------------ | ------------------------ |
 | Linear Probing  |  82.0 | 88.7 |   75.9  |    85.3|0.77/0.17           | |  
 | Full-Finetuning   |83.6 |   93.8| 85.7  |89.5|86.57/85.96 ||  

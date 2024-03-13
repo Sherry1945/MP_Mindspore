@@ -1,465 +1,3 @@
-
-# Copyright 2021-2022 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ============================================================================
-"""Vision Transformer implementation."""
-
-# from importlib import import_module
-# from easydict import EasyDict as edict
-import numpy as np
-
-# import mindspore as ms
-# import mindspore.ops as ops
-# from mindspore.common.initializer import initializer
-# from mindspore.common.parameter import Parameter
-# from mindspore.nn import Cell, Dense, Dropout, SequentialCell
-# from mindspore import Tensor
-# from .representation import*
-# MIN_NUM_PATCHES = 4
-
-# class VitConfig:
-#     """
-#     VitConfig
-#     """
-#     def __init__(self, configs):
-#         self.configs = configs
-
-#         # network init
-#         self.network_norm = ms.nn.LayerNorm((configs.normalized_shape,))
-#         self.network_init = ms.common.initializer.Normal(sigma=1.0)
-#         self.network_dropout_rate = 0.0
-#         self.network_pool = 'cls'
-#         self.network = ViT
-
-#         # stem
-#         self.stem_init = ms.common.initializer.XavierUniform()
-#         self.stem = VitStem
-
-#         # body
-#         self.body_norm = ms.nn.LayerNorm
-#         self.body_drop_path_rate = 0.0
-#         self.body = Transformer
-
-#         # body attention
-#         self.attention_init = ms.common.initializer.XavierUniform()
-#         self.attention_activation = ms.nn.Softmax()
-#         self.attention_dropout_rate = 0.0
-#         self.attention = Attention
-
-#         # body feedforward
-#         self.feedforward_init = ms.common.initializer.XavierUniform()
-#         self.feedforward_activation = ms.nn.GELU()
-#         self.feedforward_dropout_rate = 0.0
-#         self.feedforward = FeedForward
-
-#         # head
-#         self.head = origin_head
-#         self.head_init = ms.common.initializer.XavierUniform()
-#         self.head_dropout_rate = 0.0
-#         self.head_norm = ms.nn.LayerNorm((configs.normalized_shape,))
-#         self.head_activation = ms.nn.GELU()
-
-
-# class DropPath(Cell):
-#     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
-#     """
-
-#     def __init__(self, drop_prob=None, seed=0):
-#         super(DropPath, self).__init__()
-#         self.keep_prob = 1 - drop_prob
-#         seed = min(seed, 0) # always be 0
-
-#         self.shape = ops.Shape()
-#         self.ones = ops.Ones()
-#         self.dropout = Dropout(p=1 - self.keep_prob)
-
-#     def construct(self, x):
-#         if self.training:
-#             x_shape = self.shape(x) # B N C
-#             mask = self.ones((x_shape[0], 1, 1), x.dtype)
-#             x = self.dropout(mask)*x
-#         return x
-
-
-# class BatchDense(Cell):
-#     """BatchDense module."""
-
-#     def __init__(self, in_features, out_features, initialization, has_bias=True):
-#         super().__init__()
-#         self.out_features = out_features
-#         self.dense = Dense(in_features, out_features, has_bias=has_bias)
-#         self.dense.weight.set_data(initializer(initialization, [out_features, in_features]))
-#         self.reshape = ops.Reshape()
-
-#     def construct(self, x):
-#         bs, seq_len, d_model = x.shape
-#         out = self.reshape(x, (bs * seq_len, d_model))
-#         out = self.dense(out)
-#         out = self.reshape(out, (bs, seq_len, self.out_features))
-#         return out
-
-
-# class ResidualCell(Cell):
-#     """Cell which implements x + f(x) function."""
-#     def __init__(self, cell):
-#         super().__init__()
-#         self.cell = cell
-
-#     def construct(self, x, **kwargs):
-#         return self.cell(x, **kwargs) + x
-
-
-# def pretrain_head(vit_config):
-#     """Head for ViT pretraining."""
-#     d_model = vit_config.configs.d_model
-#     mlp_dim = vit_config.configs.mlp_dim
-#     num_classes = vit_config.configs.num_classes
-
-#     dropout_rate = vit_config.head_dropout_rate
-#     initialization = vit_config.head_init
-#     normalization = vit_config.head_norm
-#     activation = vit_config.head_activation
-
-#     dense1 = Dense(d_model, mlp_dim)
-#     dense1.weight.set_data(initializer(initialization, [mlp_dim, d_model]))
-#     dense2 = Dense(mlp_dim, num_classes)
-#     dense2.weight.set_data(initializer(initialization, [num_classes, mlp_dim]))
-
-#     return SequentialCell([
-#         normalization,
-#         dense1,
-#         activation,
-#         Dropout(p=dropout_rate),
-#         dense2])
-
-
-# def origin_head(vit_config):
-#     """Head for ViT pretraining."""
-#     d_model = vit_config.configs.d_model
-#     num_classes = vit_config.configs.num_classes
-#     initialization = vit_config.head_init
-#     dense = Dense(d_model, num_classes)
-#     dense.weight.set_data(initializer(initialization, [num_classes, d_model]))
-#     return SequentialCell([dense])
-
-
-# class VitStem(Cell):
-#     """Stem layer for ViT."""
-
-#     def __init__(self, vit_config):
-#         super().__init__()
-#         d_model = vit_config.configs.d_model
-#         patch_size = vit_config.configs.patch_size
-#         image_size = vit_config.configs.image_size
-#         initialization = vit_config.stem_init
-#         channels = 3
-
-#         assert image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
-#         num_patches = (image_size // patch_size) ** 2
-#         assert num_patches > MIN_NUM_PATCHES, f'your number of patches {num_patches} is too small'
-#         patch_dim = channels * patch_size ** 2
-
-#         self.patch_size = patch_size
-#         self.reshape = ops.Reshape()
-#         self.transpose = ops.Transpose()
-#         self.patch_to_embedding =  nn.Conv2d(3, 768, kernel_size=16, stride=16,has_bias=True)
-
-#     def construct(self, img):
-#         p = self.patch_size
-#         bs, channels, h, w = img.shape
-#        # x = self.reshape(img, (bs, channels, h // p, p, w // p, p))
-#         #x = self.transpose(x, (0, 2, 4, 1, 3, 5))
-#         #x = self.reshape(x, (bs, (h//p)*(w//p), channels*p*p))
-#         x = self.patch_to_embedding( img)
-#         flatten=nn.Flatten(start_dim=2)
-#         x=flatten(x).transpose(0,2,1)
-#         return x
-
-
-# class ViT(Cell):
-#     """Vision Transformer implementation."""
-
-#     def __init__(self, vit_config):
-#         super().__init__()
-
-#         d_model = vit_config.configs.d_model
-#         patch_size = vit_config.configs.patch_size
-#         image_size = vit_config.configs.image_size
-
-#         initialization = vit_config.network_init
-#         pool = vit_config.network_pool
-#         dropout_rate = vit_config.network_dropout_rate
-#         norm = vit_config.network_norm
-
-#         stem = vit_config.stem(vit_config)
-#         body = vit_config.body(vit_config)
-#         self.head = Moment_Probing_ViT(in_dim=768,num_classes=1000)
-#         #self.head =nn.Dense(768,1000)
-#         assert pool in {'cls', 'mean'}, 'pool type must be either cls or mean'
-#         num_patches = (image_size // patch_size) ** 2
-
-#         if pool == "cls":
-#             self.cls_token = Parameter(initializer(initialization, (1, 1, d_model)),
-#                                        name='cls', requires_grad=True)
-#             self.pos_embedding = Parameter(initializer(initialization, (1, num_patches + 1, d_model)),
-#                                            name='pos_embedding', requires_grad=True)
-#             self.tile = ops.Tile()
-#             self.cat_1 = ops.Concat(axis=1)
-#         else:
-#             self.pos_embedding = Parameter(initializer(initialization, (1, num_patches, d_model)),
-#                                            name='pos_embedding', requires_grad=True)
-#             self.mean = ops.ReduceMean(keep_dims=False)
-#         self.pool = pool
-
-#         self.dropout = Dropout(p=dropout_rate)
-#         self.stem = stem
-#         self.body = body
-#         self.norm = norm
-
-#     def construct(self, img):
-        
-#         #cls=32*3*224*224
-#         #sequence = mindspore.numpy.arange(0.0001, 0.0001*cls + 0.0001,0.0001,dtype=mindspore.float32)
-#         #tensor = sequence.reshape(32,3,224,224)
-#         #img = mindspore.Tensor(tensor, mindspore.float32)
-#         ones=ops.Ones()
-#         img=ones((32,3,224,224),mindspore.float32)
-#         x = self.stem(img)
-#         print("patchembed"+str(x))
-#         bs, seq_len, _ = x.shape
-
-#         if self.pool == "cls":
-#             cls_tokens = self.tile(self.cls_token, (bs, 1, 1))
-#             x = self.cat_1((cls_tokens, x)) # now x has shape = (bs, seq_len+1, d)
-#             x += self.pos_embedding[:, :(seq_len + 1)]
-#         else:
-#             x += self.pos_embedding[:, :seq_len]
-
-#         y = ops.cast(x, ms.float32)
-#         y = self.dropout(y)
-#         x = ops.cast(y, x.dtype)
-
-#         x = self.body(x)
-#         print("body"+str(x))
-#         if self.norm is not None:
-#             x = self.norm(x)
-#         cls=x[:, 0]
-
-#         return self.head(cls,x)
-#         #return self.head(cls)
-
-# class Attention(Cell):
-#     """Attention layer implementation."""
-
-#     def __init__(self, vit_config):
-#         super().__init__()
-#         d_model = vit_config.configs.d_model
-#         dim_head = vit_config.configs.dim_head
-#         heads = vit_config.configs.heads
-
-
-#         activation = vit_config.attention_activation
-#         dropout_rate = vit_config.attention_dropout_rate
-
-#         self.dim_head = dim_head
-#         self.heads = heads
-#         self.scale = Tensor([dim_head ** -0.5])
-#         self.qkv=Dense(d_model,3*d_model,has_bias=True)
-#         self.dropout = Dropout(p=dropout_rate)
-#         self.proj=Dense(d_model,d_model,has_bias=True)
-#         self.activation = activation
-#         #self.attn_drop =Dropout(0.1)
-#         #auxiliary functions
-#         self.reshape = ops.Reshape()
-#         self.transpose = ops.Transpose()
-#         self.mul = ops.Mul()
-#         self.q_matmul_k = ops.BatchMatMul(transpose_b=True)
-#         self.attn_matmul_v = ops.BatchMatMul()
-#         self.softmax_nz =True
-          
-#     def construct(self, x):
-#         '''x size - BxNxd_model'''
-#         ones=ops.Ones()
-#         x=ones((32,197,768),mindspore.float32)
-#         print("x"+str(x.shape))
-#         b, n, d, h, hd = x.shape[0], x.shape[1], x.shape[2], self.heads, self.dim_head
-#         qkv=self.qkv(x).reshape(b,n,3,h,hd).permute(2,0,3,1,4)
-#         q=qkv[0]
-#         k=qkv[0]
-#         v=qkv[0]
-#         atten=self.q_matmul_k(q, k)*self.scale
-#         atten=ops.softmax(atten)
-#         out=self.attn_matmul_v(atten, v).transpose((0, 2, 1, 3)).reshape(b,n,d)
-#         out=self.proj(out)
-#         print("attention"+str(out))
-#         #out = self.reshape(out, (bs, seq_len, d_model))
-#         return out
-
-
-# class FeedForward(Cell):
-#     """FeedForward layer implementation."""
-
-#     def __init__(self, vit_config):
-#         super().__init__()
-
-#         d_model = vit_config.configs.d_model
-#         hidden_dim = vit_config.configs.mlp_dim
-
-#         initialization = vit_config.feedforward_init
-#         activation = vit_config.feedforward_activation
-#         dropout_rate = vit_config.feedforward_dropout_rate
-
-#         self.ff1 = BatchDense(d_model, hidden_dim, initialization)
-#         self.activation = activation
-#         self.dropout = Dropout(p=dropout_rate)
-#         self.ff2 = BatchDense(hidden_dim, d_model, initialization)
-
-#     def construct(self, x):
-#         y = self.ff1(x)
-
-#         y = self.activation(y)
-#         y = self.dropout(y)
-#         y = self.ff2(y)
-#         y = self.dropout(y)
-#         return y
-
-
-# class Transformer(Cell):
-#     """Transformer implementation."""
-
-#     def __init__(self, vit_config):
-#         super().__init__()
-
-#         depth = vit_config.configs.depth
-#         drop_path_rate = vit_config.body_drop_path_rate
-
-#         dpr = [x.item() for x in np.linspace(0, drop_path_rate, depth)]
-#         att_seeds = [np.random.randint(1024) for _ in range(depth)]
-#         mlp_seeds = [np.random.randint(1024) for _ in range(depth)]
-#         layers = []
-#         for i in range(depth):
-#             normalization = vit_config.body_norm((vit_config.configs.normalized_shape,))
-#             normalization2 = vit_config.body_norm((vit_config.configs.normalized_shape,))
-#             attention = vit_config.attention(vit_config)
-#             feedforward = vit_config.feedforward(vit_config)
-
-#             if drop_path_rate > 0:
-#                 layers.append(
-#                     SequentialCell([
-#                         ResidualCell(SequentialCell([normalization,
-#                                                      attention,
-#                                                      DropPath(dpr[i], att_seeds[i])])),
-#                         ResidualCell(SequentialCell([normalization2,
-#                                                      feedforward,
-#                                                      DropPath(dpr[i], mlp_seeds[i])]))
-#                     ])
-#                 )
-#             else:
-#                 layers.append(
-#                     SequentialCell([
-#                         ResidualCell(SequentialCell([normalization,
-#                                                      attention])),
-#                         ResidualCell(SequentialCell([normalization2,
-#                                                      feedforward]))
-#                     ])
-#                 )
-
-#         self.layers = SequentialCell(layers)
-
-#     def construct(self, x):
-#         return self.layers(x)
-
-
-# def load_function(func_name):
-#     """Load function using its name."""
-#     modules = func_name.split(".")
-#     if len(modules) > 1:
-#         module_path = ".".join(modules[:-1])
-#         name = modules[-1]
-#         module = import_module(module_path)
-#         return getattr(module, name)
-#     return func_name
-
-
-# vit_cfg = edict({
-#     'd_model': 768,
-#     'depth': 12,
-#     'heads': 12,
-#     'mlp_dim': 3072,
-#     'dim_head': 64,
-#     'patch_size': 32,
-#     'normalized_shape': 768,
-#     'image_size': 224,
-#     'num_classes': 1001,
-# })
-
-
-# def vit_base_patch16(args):
-#     """vit_base_patch16"""
-#     vit_cfg.d_model = 768
-#     vit_cfg.depth = 12
-#     vit_cfg.heads = 12
-#     vit_cfg.mlp_dim = 3072
-#     vit_cfg.dim_head = vit_cfg.d_model // vit_cfg.heads
-#     vit_cfg.patch_size = 16
-#     vit_cfg.normalized_shape = vit_cfg.d_model
-#     vit_cfg.image_size = 224
-#     vit_cfg.num_classes = 1000
-
-#     #if args.vit_config_path != '':
-#     #    print("get vit_config_path")
-#     #    vit_config = load_function(args.vit_config_path)(vit_cfg)
-#     #else:
-#     #    print("get default_vit_cfg")
-#      #   vit_config = VitConfig(vit_cfg)
-#     vit_config = VitConfig(vit_cfg)
-#     model = vit_config.network(vit_config)
-#     return model
-
-
-# def vit_base_patch32(args):
-#     """vit_base_patch32"""
-#     vit_cfg.d_model = 768
-#     vit_cfg.depth = 12
-#     vit_cfg.heads = 12
-#     vit_cfg.mlp_dim = 3072
-#     vit_cfg.dim_head = vit_cfg.d_model // vit_cfg.heads
-#     vit_cfg.patch_size = 32
-#     vit_cfg.normalized_shape = vit_cfg.d_model
-#     vit_cfg.image_size = args.train_image_size
-#     vit_cfg.num_classes = args.class_num
-
-#     if args.vit_config_path != '':
-#         print("get vit_config_path")
-#         vit_config = load_function(args.vit_config_path)(vit_cfg)
-#     else:
-#         print("get default_vit_cfg")
-#         vit_config = VitConfig(vit_cfg)
-
-#     model = vit_config.network(vit_config)
-
-#     return model
-
-# def get_network(backbone_name, args):
-#     """get_network"""
-#     if backbone_name == 'vit_base_patch32':
-#         backbone = vit_base_patch32(args=args)
-#     elif backbone_name == 'vit_base_patch16':
-#         backbone = vit_base_patch16(args=args)
-#     else:
-#         raise NotImplementedError
-#     return backbone
 import math
 import logging
 from functools import partial
@@ -512,7 +50,7 @@ class Mlp(nn.Cell):
         #self.drop1 = ops.dropout()
         self.fc2 = Dense(hidden_features, out_features, has_bias=True)
         #self.drop2 = ops.dropout)
-
+        #self.drop = nn.Dropout(0.9)
     def construct(self, x):  
         # print("premlp"+str(x))
         # print(ops.sum(x))
@@ -525,7 +63,7 @@ class Mlp(nn.Cell):
         #x = self.drop1(x)
         x = self.fc2(x)
 
-        #x = self.drop2(x)
+        #x = self.drop(x)
         # print("postmlp"+str(x))
         # print(ops.sum(x))
         return x
@@ -598,13 +136,16 @@ class Block(nn.Cell):
 
     def construct(self, x):
         if self.tuning_mode == 'psrp':
-
+            #print("psrp input"+str(x))  
             x = x + self.drop_path1(self.ls1(self.attn(self.norm1(x))))
-     
-            weight, bias = self.psrp(x)
 
+            #print("psrp output"+str(x))   
+            weight, bias = self.psrp(x)
+            #print("weight"+str(weight))
+            #print("bias"+str(bias))
 
             x = x + self.drop_path2(self.ls2(bias + (weight + 1)*self.mlp(self.norm2(x))))
+            #print("psrp output"+str(x))
         else:
             # print(self.drop_path1)
             # print(self.drop_path2)            
@@ -806,18 +347,18 @@ class VisionTransformer(nn.Cell):
     def forward_features(self, x):
         #ones=ops.Ones()
         #x=ones((32,3,224,224),mindspore.float32)
-        # cls=32*3*224*224
-        # sequence = mindspore.numpy.arange(0.0001, 0.0001*cls + 0.0001, 0.0001,dtype=mindspore.float32)
-        # tensor = sequence.reshape(32,3,224,224)
-        # x = mindspore.Tensor(tensor, mindspore.float32)
+        #cls=32*3*224*224
+        #sequence = mindspore.numpy.arange(0.0001, 0.0001*cls + 0.0001, 0.0001,dtype=mindspore.float32)
+        #tensor = sequence.reshape(32,3,224,224)
+        #x = mindspore.Tensor(tensor, mindspore.float32)
         x = self.patch_embed(x)
-        # print("patchembed"+str(x))
+        #print("patchembed"+str(x))
         # print(ops.sum(x))
         if self.cls_token is not None:
             x = ops.cat((self.cls_token.broadcast_to((x.shape[0], -1, -1)), x), axis=1)
 
         x = x + self.pos_embed
-        # print("poseembed"+str(x))
+        #print("poseembed"+str(x))
         # print(ops.sum(x))
         # print("clstoken"+str(self.cls_token))
         # print(ops.sum(self.cls_token))
@@ -825,6 +366,7 @@ class VisionTransformer(nn.Cell):
             x = checkpoint_seq(self.blocks, x)
         else:
             x = self.blocks(x)
+        #print("body"+str(x))
         x = self.norm(x)           
         return x 
 
@@ -850,6 +392,7 @@ class VisionTransformer(nn.Cell):
         #ones=ops.Ones()
         #x=ones((32,197,768),mindspore.float32)    
         x = self.forward_head(x)
+
         #print("head"+str(x))
         #print(ops.sum(x))
         return x 
@@ -867,16 +410,10 @@ def vit_base_patch16(args):
     patch_size = 16
     normalized_shape = 768
     image_size = 224
-    num_classes = 100
+    num_classes = args.num_classes
+    tuning_mode=args.tuning_mode
 
-    #if args.vit_config_path != '':
-    #    print("get vit_config_path")
-    #    vit_config = load_function(args.vit_config_path)(vit_cfg)
-    #else:
-    #    print("get default_vit_cfg")
-     #   vit_config = VitConfig(vit_cfg)
-    #vit_config = VitConfig(vit_cfg)
-    model = VisionTransformer(num_classes =num_classes)
+    model = VisionTransformer(num_classes =num_classes,tuning_mode=tuning_mode)
     return model
 
 

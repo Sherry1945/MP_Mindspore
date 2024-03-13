@@ -11,17 +11,17 @@ Recently, efficient fine-tuning of large-scale pre-trained models has attracted 
 
 
 |Method          | Imagenet-1k | Cifar-100 | NABirds |CUB-200-2011| #Params.(M) | Checkpoint                                                          |
-| ------------------ | ----- | ------- | ----- | ------------------------------------------------------------ | 
-| LinearProbing  |  82.0 | 88.7 |   75.9  |    85.3|0.17           | | 
-| Full-Finetune   |83.6 |   93.8| 85.7  |89.5|85.96 || 
-| MP++   | 84.0 |  94.0  |  85.9   |  89.3            |([Imagenet-1K ](https)  
+| ------------------ | ----- | ------- | ----- | ------------------------------------------------------------ |  
+| LinearProbing  |  82.0 | 88.7 |   75.9  |    85.3|0.17           | |  
+| Full-Finetune   |83.6 |   93.8| 85.7  |89.5|85.96 ||  
+| MP++   | 84.0 |  94.0  |  85.9   |  89.3            |([Imagenet-1K ](https)  |  
 
 
 ## Usage
 ### Environments
 ●OS：18.04  
 ●CUDA：11.6  
-●Toolkit：mindspore2.2 
+●Toolkit：mindspore2.2  
 ●GPU:GTX 3090 
 
 ### Install

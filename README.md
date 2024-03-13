@@ -127,5 +127,6 @@ mpirun --allow-run-as-root -n 8 \
 ```
 
 # Acknowledgement
-The work was sponsored by National Natural Science Foundation of China (Grant No.s 62276186, 61925602),  CAAI-Huawei MindSpore Open Fund under Grant CAAIXSJLJJ-2022-010 C, and Haihe Lab of ITAI (NO. 22HHXCJC00002). 
+The work was sponsored by National Natural Science Foundation of China (Grant No.s 62276186, 61925602),  CAAI-Huawei MindSpore Open Fund under Grant CAAIXSJLJJ-2022-010 C, and Haihe Lab of ITAI (NO. 22HHXCJC00002).   
+
 Our code are built following [ssf](https://github.com/securesocketfunneling/ssf), thanks for their excellent work. 

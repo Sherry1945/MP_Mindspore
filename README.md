@@ -60,7 +60,7 @@ Since the original [vtab dataset](https://github.com/google-research/task_adapta
 ```bash
 wget https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
 ```
--ImageNet-1K
+- ImageNet-1K
 Download and extract ImageNet train and val images from http://image-net.org/. 
 The directory structure is the standard layout for the torchvision [`datasets.ImageFolder`](https://pytorch.org/docs/stable/torchvision/datasets.html#imagefolder), 
 and the training and validation data is expected to be in the `train/` folder and `val/` folder respectively:

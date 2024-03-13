@@ -11,7 +11,7 @@ Recently, efficient fine-tuning of large-scale pre-trained models has attracted 
 
 
 |Method          | IN-1k | Cifar-100 | NABirds |CUB-200| #Params.(M)  (IN-1k/other datasets )| Checkpoint                                                          |
-| :------------------  |:-----:| : -----: | :----------------:|:--------------------:|:------------------------ :|  
+| :------------------  |:-----:| : -----: | :----------------:|:--------------------:|:------------------------ :| :------------------------ : |
 | Linear Probing  |  82.0 | 88.7 |   75.9  |    85.3|0.77/0.17           | |  
 | Full-Finetuning   |83.6 |   93.8| 85.7  |89.5|86.57/85.96 ||  
 | MP+（Mindspore）| 84.0 |  94.0  |  85.9   |  89.3|   4.10/1.64  |[Imagenet-1K ](https://drive.google.com/file/d/1V4DAFY01KRUyoH3TG1s4Lcmqf-fnY596/view?usp=sharing)  |  

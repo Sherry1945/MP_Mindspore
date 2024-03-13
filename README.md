@@ -64,7 +64,7 @@ and the training and validation data is expected to be in the `train/` folder an
     class/2
       img4.jpeg
 ```
-
+### Pretrained Checkpoint
 
 ### Evaluation
 

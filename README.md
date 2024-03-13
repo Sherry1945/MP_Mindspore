@@ -1,6 +1,6 @@
 # MomentProbing_mindspore
 
-This is an code implementation of ICCV2023 paper using mindspore([Tuning Pre-trained Model via Moment Probing](https://ieeexplore.ieee.org/document/10377394) , created by, Mingze Gao,Zhenyi Liu and Qilong Wang.
+This is an code implementation of ICCV2023 paper using mindspore([Tuning Pre-trained Model via Moment Probing](https://ieeexplore.ieee.org/document/10377394)  , created by, Mingze Gao,Zhenyi Liu and Qilong Wang.
 
 
 ## Introduction
@@ -10,20 +10,18 @@ Recently, efficient fine-tuning of large-scale pre-trained models has attracted 
 ## Main Results on ImageNet with Pretrained Models
 
 
-|Method           | Acc@1(%) | #Params.(M) | FLOPs(G) | Checkpoint                                                          |
+|Method          | Imagenet-1k | Cifar-100 | NABirds |CUB-200-2011| #Params.(M) | Checkpoint                                                          |
 | ------------------ | ----- | ------- | ----- | ------------------------------------------------------------ |
-| ResNet-18   |  70.53 |  11.7   |   1.81  |               |
-| ResNet-18+DropCov(Ours)   | 73.8  |   19.6  |  3.11   |[Download](https://drive.google.com/file/d/1zVDDmmQWQ-CDDoxjaolkcjI3MACE-rxx/view?usp=drive_link)|
-| ResNet-34   |  73.68 |  21.8   |   3.66  |               |
-| ResNet-34+DropCov(Ours)   | 76.13  |   29.7  |  5.56   |[Download](https://drive.google.com/file/d/1-gvogrLlRSnpzigvevLPV1GKAHF0vr2K/view?usp=drive_link)|
-| ResNet-50   |  76.07 |  25.6   |   3.86  |               |
-| ResNet-50+DropCov(Ours)   | 77.77  |   32.0  |  6.19   |[Download](https://drive.google.com/file/d/1PBy8evHi-xiJHiTWgqrUs8jTH58hJM2n/view?usp=share_link)|
+| LinearProbing  |  82.0 | 88.7 |   75.9  |    85.3|0.17           | |
+| Full-Finetune   |83.6 |   93.8| 85.7  |89.5|85.96 ||
+| MP++   | 84.0 |  94.0  |  85.9   |  89.3            |([Imagenet-1K ](https) 
+
 
 ## Usage
 ### Environments
 ●OS：18.04  
 ●CUDA：11.6  
-●Toolkit：mindspore2.2
+●Toolkit：mindspore2.2 
 ●GPU:GTX 3090 
 
 ### Install
@@ -115,8 +113,5 @@ mpirun --allow-run-as-root -n 8 \
 ```
 
 # Acknowledgement
-
-
-Our code are built following 
-[ssf](https://github.com/securesocketfunneling/ssf)
-, thanks for their excellent work
+The work was sponsored by National Natural Science Foundation of China (Grant No.s 62276186, 61925602),  CAAI-Huawei MindSpore Open Fund under Grant CAAIXSJLJJ-2022-010 C, and Haihe Lab of ITAI (NO. 22HHXCJC00002). 
+Our code are built following [ssf](https://github.com/securesocketfunneling/ssf), thanks for their excellent work. 

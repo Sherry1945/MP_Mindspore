@@ -71,8 +71,7 @@ def create_dataset_imagenet(dataset_dir, args, repeat_num=1, training=True):
     else:
         data_set = ds.ImageFolderDataset(dataset_dir, num_parallel_workers=args.num_parallel_workers, shuffle=shuffle,
                                          num_shards=device_num, shard_id=rank_id)
-    for img in data_set:
-         print(img)
+
     image_size = args.image_size
 
     # define map operations

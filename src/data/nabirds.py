@@ -15,6 +15,7 @@
 """
 Data operations, will be used in train.py and eval.py
 """
+from mindspore.dataset import GeneratorDataset
 import os
 import multiprocessing
 import mindspore.common.dtype as mstype
@@ -29,8 +30,9 @@ from src.data.augment.random_erasing import RandomErasing
 from .data_utils.moxing_adapter import sync_data
 import pickle
 import numpy as np
-
-class Cifar100:
+import pandas as pd
+import cv2
+class Nabirds:
     """ImageNet Define"""
 
     def __init__(self, args, training=True):
@@ -44,9 +46,78 @@ class Cifar100:
             self.train_dataset = create_dataset_imagenet(train_dir, training=True, args=args)
             self.val_dataset = create_dataset_imagenet(val_ir, training=False, args=args)
         else:
-            self.train_dataset = create_dataset_imagenet(args.data_url , usage='train', training=True, args=args)
-            self.val_dataset = create_dataset_imagenet(args.data_url, training=False, args=args, usage='test')
+            self.train_dataset = create_dataset_imagenet(args.data_url , training=True, args=args)
+            self.val_dataset = create_dataset_imagenet(args.data_url, training=False, args=args)
 
+class NabirdsDataset(object):
+    base_folder = 'nabirds/images'
+    def __init__(self, root, train=True, transform=None, target_transform=None, download=False):
+        super(NabirdsDataset, self).__init__()
+        dataset_path = os.path.join(root, 'nabirds')
+        #self.loader = default_loader
+        self.root=root
+        self.train = train
+        self.transform = transform
+        if download:
+            self._download()
+        image_paths = pd.read_csv(os.path.join(dataset_path, 'images.txt'),
+                                  sep=' ', names=['img_id', 'filepath'])
+        image_class_labels = pd.read_csv(os.path.join(dataset_path, 'image_class_labels.txt'),
+                                         sep=' ', names=['img_id', 'target'])
+        # Since the raw labels are non-continuous, map them to new ones
+        self.label_map = get_continuous_class_map(image_class_labels['target'])
+        train_test_split = pd.read_csv(os.path.join(dataset_path, 'train_test_split.txt'),
+                                       sep=' ', names=['img_id', 'is_training_img'])
+        data = image_paths.merge(image_class_labels, on='img_id')
+        self.data = data.merge(train_test_split, on='img_id')
+        # Load in the train / test split
+        if self.train:
+            self.data = self.data[self.data.is_training_img == 1]
+        else:
+            self.data = self.data[self.data.is_training_img == 0]
+
+        # Load in the class data
+        self.class_names = load_class_names(dataset_path)
+        self.class_hierarchy = load_hierarchy(dataset_path)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        sample = self.data.iloc[index]
+        path = os.path.join(self.root, self.base_folder, sample.filepath)
+        target = self.label_map[sample.target]
+        img =cv2.imread(path)
+
+        if self.transform is not None:
+            img = self.transform(img)
+        return img, target
+
+def get_continuous_class_map(class_labels):
+    label_set = set(class_labels)
+    return {k: i for i, k in enumerate(label_set)}
+
+def load_class_names(dataset_path=''):
+    names = {}
+
+    with open(os.path.join(dataset_path, 'classes.txt')) as f:
+        for line in f:
+            pieces = line.strip().split()
+            class_id = pieces[0]
+            names[class_id] = ' '.join(pieces[1:])
+
+    return names
+
+def load_hierarchy(dataset_path=''):
+    parents = {}
+
+    with open(os.path.join(dataset_path, 'hierarchy.txt')) as f:
+        for line in f:
+            pieces = line.strip().split()
+            child_id, parent_id = pieces
+            parents[child_id] = parent_id
+
+    return parents
 
 
 
@@ -66,61 +137,42 @@ def create_dataset_imagenet(dataset_dir, args, repeat_num=1, training=True,usage
     device_num, rank_id = _get_rank_info()
     shuffle = bool(training)
     if device_num == 1 :
-        data_set = ds.Cifar100Dataset(dataset_dir, num_parallel_workers=get_num_parallel_workers(12), shuffle=shuffle,usage=usage)
+        data_set = NabirdsDataset(dataset_dir,training)
+        data_set= GeneratorDataset(data_set,column_names=["image", "label"])
     else:
-        data_set = ds.Cifar100Dataset(dataset_dir, num_parallel_workers=get_num_parallel_workers(12), shuffle=shuffle,
-                                     num_shards=device_num, shard_id=rank_id,usage=usage)
-    #data = data_set.create_dict_iterator()
-    #for image in data_set:
-            #print(image )
-    print(data_set.get_dataset_size())
-
-    input=["image","fine_label"]
-    data_set=data_set.project(columns=input)
-    output=["image","label"]
-    data_set=data_set.rename(input_columns=input,output_columns=output)
+        data_set = NabirdsDataset(dataset_dir,training)
+        data_set= GeneratorDataset(data_set,column_names=["image", "label"],num_parallel_workers=get_num_parallel_workers(3), shuffle=shuffle,
+                                     num_shards=device_num, shard_id=rank_id)
 
 
     image_size = args.image_size
- 
-    if training:
-        mean = [0.507, 0.487, 0.441]
-        std = [0.267, 0.256, 0.276]
-        aa_params = dict(
-            translate_const=int(image_size * 0.45),
-            img_mean=tuple([min(255, round(255 * x)) for x in mean]),
-        )
-        interpolation = args.interpolation
-        auto_augment = args.auto_augment
-        assert auto_augment.startswith('rand')
-        aa_params['interpolation'] = _pil_interp(interpolation)
 
+
+    image_size = args.image_size
+
+#[0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010]
+    if training:
+        mean =[0.5*255 ,0.5*255,0.5*255]
+        std = [0.5*255 ,0.5*255,0.5*255]
         transform_img = [
-            #vision.ToTensor(), 
-            #vision.HWC2CHW(),
-            #vision.RandomCrop((32, 32), (4, 4, 4, 4)), 
-            vision.Resize((image_size,image_size),interpolation=Inter.BICUBIC),
+
+            vision.RandomResizedCrop((image_size,image_size),interpolation=Inter.BICUBIC),
             vision.RandomHorizontalFlip(prob=0.5),
-            #vision.HWC2CHW(),
-            vision.ToPIL()
-        ]
-    
-        transform_img += [rand_augment_transform(auto_augment, aa_params)]
-        transform_img += [
-            vision.ToTensor(),
-            vision.Normalize(mean=mean, std=std, is_hwc=False),
-            RandomErasing(args.re_prob, mode=args.re_mode, max_count=args.re_count),
-            #vision.HWC2CHW()
+            #vision.ToTensor(),
+            vision.Normalize(mean=mean, std=std, is_hwc=True),
+            vision.HWC2CHW(),
+            #vision.ToPIL()
         ]
     else:
-        mean = [0.507 * 255, 0.487 * 255, 0.441 * 255]
-        std = [0.267 * 255, 0.256 * 255, 0.276 * 255]
+        mean = [0.5*255 ,0.5*255,0.5*255]
+        std = [0.5*255 ,0.5*255,0.5*255]
         # test transform complete
         if args.crop:
             transform_img = [
                 #vision.Decode(),
                 vision.Resize(int(256 / 224 * image_size), interpolation=Inter.BICUBIC),
                 vision.CenterCrop(image_size),
+                #vision.ToTensor(),
                 vision.Normalize(mean=mean, std=std, is_hwc=True),
                 vision.HWC2CHW()
             ]
@@ -128,39 +180,29 @@ def create_dataset_imagenet(dataset_dir, args, repeat_num=1, training=True,usage
             transform_img = [
                 #vision.Decode(),
                 vision.Resize(int(image_size), interpolation=Inter.BICUBIC),
+                #vision.ToTensor(),
                 vision.Normalize(mean=mean, std=std, is_hwc=True),
                 vision.HWC2CHW()
             ]
 
-    transform_label = C.TypeCast(mstype.int32)
-    data_set = data_set.map(input_columns="label", num_parallel_workers=args.num_parallel_workers,
-                            operations=transform_label)
+
     data_set = data_set.map(input_columns="image", num_parallel_workers=args.num_parallel_workers,
                             operations=transform_img)
-    
-   
-    if (args.mix_up > 0. or args.cutmix > 0.)  and not training:
-        # if use mixup and not training(False), one hot val data label
-        one_hot = C.OneHot(num_classes=args.num_classes)
-        data_set = data_set.map(input_columns="label", num_parallel_workers=args.num_parallel_workers,
+    one_hot = C.OneHot(num_classes=args.num_classes)
+    data_set = data_set.map(input_columns="label", num_parallel_workers=args.num_parallel_workers,
                                 operations=one_hot)
-
+    #data=data_set.create_dict_iterator()
+    #for img in data:
+    #    print(img['label'])
+    transform_label = C.TypeCast(mstype.float32)
+    data_set = data_set.map(input_columns="label", num_parallel_workers=args.num_parallel_workers,
+                            operations=transform_label)
 
     # apply batch operations
 
     data_set = data_set.batch(args.batch_size, drop_remainder=True,
                               num_parallel_workers=args.num_parallel_workers)
 
-    if (args.mix_up > 0. or args.cutmix > 0.) and training:
-        mixup_fn = Mixup(
-            mixup_alpha=args.mix_up, cutmix_alpha=args.cutmix, cutmix_minmax=None,
-            prob=args.mixup_prob, switch_prob=args.switch_prob, mode=args.mixup_mode,
-            label_smoothing=args.label_smoothing, num_classes=args.num_classes)
-
-        data_set = data_set.map(operations=mixup_fn, input_columns=["image", "label"],
-                                num_parallel_workers=args.num_parallel_workers)
-
-    # apply dataset repeat operation
     data_set = data_set.repeat(repeat_num)
     ds.config.set_prefetch_size(4)
     return data_set

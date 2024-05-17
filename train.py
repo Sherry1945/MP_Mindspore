@@ -45,13 +45,27 @@ def main():
 
     # get model and cast amp_level
     net = get_model(args)
+    
+    if args.tuning_mode:
+  
+        for param in net.trainable_params() :
+            if args.tuning_mode == 'linear_probe' :
+                if "head." not in  param.name :
+                    param.requires_grad = False
+            if args.tuning_mode == 'psrp':
+               
+                if "head." not in param.name and "psrp" not in param.name:  
+                    param.requires_grad = False 
+            if param.requires_grad == True:
+                print(param.name)
     cast_amp(net)
     criterion = get_criterion(args)
     net_with_loss = NetWithLoss(net, criterion)
     if args.pretrained:
         pretrained(args, net)
-
+    
     data = get_dataset(args)
+
     batch_num = data.train_dataset.get_dataset_size()
     optimizer = get_optimizer(args, net, batch_num)
     # save a yaml file to read to record parameters
@@ -60,12 +74,16 @@ def main():
 
     eval_network = nn.WithEvalCell(net, criterion, args.amp_level in ["O2", "O3", "auto"])
     eval_indexes = [0, 1, 2]
+    
     model = Model(net_with_loss, metrics={"acc", "loss"},
                   eval_network=eval_network,
                   eval_indexes=eval_indexes)
 
-    config_ck = CheckpointConfig(save_checkpoint_steps=data.train_dataset.get_dataset_size(),
-                                 keep_checkpoint_max=args.save_every)
+
+    
+
+    config_ck = CheckpointConfig(save_checkpoint_steps=data.train_dataset.get_dataset_size()*args.save_checkpoint_epochs ,
+                                 keep_checkpoint_max=args.keep_checkpoint_max)
     time_cb = TimeMonitor(data_size=data.train_dataset.get_dataset_size())
 
     ckpt_save_dir = "./ckpt_" + str(rank)

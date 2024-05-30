@@ -8,32 +8,7 @@ import mindspore.common.dtype as mstype
 import math
 import mindspore
 import mindspore as ms
-# def _is_contiguous(tensor: torch.Tensor) -> bool:
-#     # jit is oh so lovely :/
-#     # if torch.jit.is_tracing():
-#     #     return True
-#     if torch.jit.is_scripting():
-#         return tensor.is_contiguous()
-#     else:
-#         return tensor.is_contiguous(memory_format=torch.contiguous_format)
-
-# @register_notrace_module
-# class LayerNorm2d(nn.LayerNorm):
-#     r""" LayerNorm for channels_first tensors with 2d spatial dimensions (ie N, C, H, W).
-#     """
-
-#     def __init__(self, normalized_shape, eps=1e-6):
-#         super().__init__(normalized_shape, eps=eps)
-
-#     def forward(self, x) -> torch.Tensor:
-#         if _is_contiguous(x):
-#             return F.layer_norm(
-#                 x.permute(0, 2, 3, 1), self.normalized_shape, self.weight, self.bias, self.eps).permute(0, 3, 1, 2)
-#         else:
-#             s, u = torch.var_mean(x, dim=1, keepdim=True)
-#             x = (x - u) * torch.rsqrt(s + self.eps)
-#             x = x * self.weight[:, None, None] + self.bias[:, None, None]
-#             return x
+         return x
 
 class Covariance(nn.Cell):
     def __init__(self, 
@@ -176,20 +151,10 @@ class Moment_Probing_ViT(nn.Cell):
         
         for layer in self.downblocks:
             cov_list = layer(cov_list)
-            #print("layer"+str(i)+str(cov_list))
-            #cls=32*3*32*32
-            #sequence = mindspore.numpy.arange(0.0001, 0.0001*cls + 0.0001, 0.0001,dtype=mindspore.float32)
-            #tensor = sequence.reshape(32,3,32,32)
-            #x = mindspore.Tensor(tensor, mindspore.float32)
-            #x=layer(x)
-            #print("layer"+str(i)+str(x))    
+         
         cross_cov = cov_list.view(B, -1)
-        #print("precross"+str(cross_cov))
         cls_token = self.classifier1(cls_token)
-        #print("cls"+str(cls_token))        
         cross_cov = self.classifier2(cross_cov)
-        #print("cross"+str(cross_cov))
-        #print("cross+cls"+str((cls_token+cross_cov)/2))  
         return (cls_token + cross_cov)/2
 
 # class Moment_Probing_CNN(nn.Module):
